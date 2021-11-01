@@ -1,5 +1,6 @@
 import cv2
 import os
+import sys
 import time
 import torch
 import argparse
@@ -16,7 +17,8 @@ torch.cuda.empty_cache()
 def main():
     cooldown_limit = 0.5  # Minimum time needed for model to confirm change in number of people in frame
     regular_check_limit = 3  # Regular classification check
-    db_path = os.path.join(os.path.dirname(__file__), "database/")
+    db_path = "database/"
+    siamese_model_path = "saved_models/siamese_model"
     load_from_file = True
     yolov5_type = "yolov5m"
     screen_size = (800, 600)
@@ -24,7 +26,15 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-db", "--db_path", help="Use absolute path . Default path : " + db_path
+        "-db",
+        "--db_path",
+        help="Database path . Use relative path . Default path : " + db_path,
+    )
+    parser.add_argument(
+        "-smp",
+        "--siamese_model_path",
+        help="Siamese Model path . Use relative path . Default path : "
+        + siamese_model_path,
     )
     parser.add_argument(
         "-load",
@@ -49,17 +59,20 @@ def main():
     parser.add_argument(
         "-size",
         "--screen_size",
-        help=f"Set Default screen size for the webcam feed : [(SCREEN_W,SCREEN_H)] . Default size : {screen_size} ",
+        help=f"Set Default screen size for the webcam feed : [SCREEN_W*SCREEN_H] . Default size : {screen_size[0]}*{screen_size[1]} ",
     )
     parser.add_argument(
         "-scale",
         "--scale",
-        help=f"Set Default scale for the webcam feed : [(SCALE_X,SCALE_Y)] . Default size : {scale} ",
+        help=f"Set Default scale for the webcam feed : [SCALE_X*SCALE_Y] . Default size : {scale[0]}*{scale[1]} ",
     )
 
     args = parser.parse_args()
     if args.db_path:
         db_path = args.db_path
+
+    if args.siamese_model_path:
+        siamese_model_path = args.siamese_model_path
 
     if args.load_from_file:
         if args.load_from_file.upper() == "FALSE":
@@ -69,28 +82,27 @@ def main():
         yolov5_type = args.yolov5_type
 
     if args.cooldown_limit:
-        cooldown_limit = args.cooldown_limit
+        cooldown_limit = float(args.cooldown_limit)
 
     if args.regular_check_limit:
-        regular_check_limit = args.regular_check_limit
+        regular_check_limit = float(args.regular_check_limit)
 
     if args.screen_size:
-        screen_size = ()
-        new_screen_size = args.screen_size[1:-1].rstrip()
-        new_screen_size = new_screen_size.split(",")
-        for i in new_screen_size:
+        screen_size = []
+        for i in args.screen_size.split("*"):
             screen_size.append(int(i))
 
     if args.scale:
-        scale = ()
-        new_scale = args.scale[1:-1].rstrip()
-        new_scale = new_scale.split(",")
-        for i in new_scale:
+        scale = []
+        for i in args.scale.split("*"):
             scale.append(int(i))
 
     # Initializing all the models and reference images
     device, classes, loader, reference_cropped_img, yolov5, resnet, mtcnn, model = init(
-        load_from_file=load_from_file, db_path=db_path, yolov5_type=yolov5_type
+        load_from_file=load_from_file,
+        db_path=db_path,
+        siamese_model_path=siamese_model_path,
+        yolov5_type=yolov5_type,
     )
 
     # Initializing cooldown clocks and Face-Recognition paramaters
@@ -227,7 +239,11 @@ def main():
         # changing frame size
 
         frame = cv2.resize(
-            frame, screen_size, fx=scale[0], fy=scale[1], interpolation=cv2.INTER_AREA
+            frame,
+            tuple(screen_size),
+            fx=scale[0],
+            fy=scale[1],
+            interpolation=cv2.INTER_AREA,
         )
 
         prev_frame_time = new_frame_time
@@ -297,13 +313,12 @@ def IOU(box1, box2, screen_size=(480, 640)):  # calculating IOU
     return overlap.sum() / float(union.sum())
 
 
-def init(load_from_file=False, db_path=None, yolov5_type="yolov5m"):
+def init(
+    load_from_file=False, db_path=None, siamese_model_path=None, yolov5_type="yolov5m"
+):
     margin = 0
     dirname = os.path.dirname(__file__)
-    if db_path is not None:
-        db_path = os.path.join(dirname, "database/")
 
-    model_path = os.path.join(dirname, "saved_models/siamese_model")
     database_embeddings_path = os.path.join(db_path, "database_embeddings")
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -313,7 +328,7 @@ def init(load_from_file=False, db_path=None, yolov5_type="yolov5m"):
 
     # Loading weights
     model = siamese_model()
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(siamese_model_path))
     model.eval()
     model.to(device)
 
@@ -329,6 +344,7 @@ def init(load_from_file=False, db_path=None, yolov5_type="yolov5m"):
             reference_cropped_img = torch.load(database_embeddings_path)["reference"]
 
         else:
+            print("It seems there isn't any previous reference embeddings saved !")
             load_from_file = False
 
     if load_from_file == False:
@@ -341,6 +357,7 @@ def init(load_from_file=False, db_path=None, yolov5_type="yolov5m"):
                 Image.open(db_path + i + "/" + os.listdir(db_path + i)[0])
             )
 
+        print("Creating new embeddings for the reference images.....")
         for i in range(len(reference_img)):
             boxes, probs, points = mtcnn.detect(reference_img[i], landmarks=True)
 
@@ -354,7 +371,9 @@ def init(load_from_file=False, db_path=None, yolov5_type="yolov5m"):
             input_img = loader((input_img - 127.5) / 128.0).type(torch.FloatTensor)
             reference_cropped_img.append(input_img)
 
+        print("Saving Image embeddings.....")
         torch.save({"reference": reference_cropped_img}, database_embeddings_path)
+        print("Embeddings saved successfully !!!")
 
     return device, classes, loader, reference_cropped_img, yolov5, resnet, mtcnn, model
 
