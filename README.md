@@ -1,2 +1,5 @@
 # Face-Recognition-Pytorch
-Training Siamese model to create an one shot neural network model using Face-Net and MTCNN as backbone. Yolov5 and OpenCV is used alongside to classify faces in the webcam feed
+Training Siamese model to create an one shot neural network model using Face-Net and MTCNN as backbone. Yolov5 and OpenCV is used alongside to classify faces in the webcam feed.
+
+## Architecture :
+We are using Yolov5 model to detect if there are any people in the webcam feed and if there is any change in number of people in the webcam feed. If there is a change we are then using MTCNN network to detect faces to create boxes for the faces. We then use these boxes to crop and resize the faces to 128×128 image which is then normalized and fed into pre-trained InceptionResnetV1 (vggface2 dataset weights) which returns embeddings of shape 1×512 which are the target embeddings. These image embeddings are previously saved for reference images that are contained in each classes in the database. Thes target and reference embeddings are fed into Siamese model which finds the similarity between target and each reference images. The reference image with highest similarity that crosses the minimum threshold is the predicted class.
