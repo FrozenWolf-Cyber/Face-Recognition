@@ -13,10 +13,23 @@ This program is only meant to detect and classify people in the webcam feed so t
 
 ## Quick start :
 ### 1. Install Requirements :
-
-### 2. Usuage :
-
+```shell
+pip install -r requirements.txt
 ```
+
+### 2. Usage :
+#### Default setup :
+```
+Database path : database/
+Siamese model path : saved_models/siamese_model
+Yolov5 type : Medium (yolov5m)
+Cooldown limit : 0.5s
+Regular check limit : 3s
+Screen size : 800×600
+Screen Scale (x,y): (1,1)
+```
+#### Custom setup :
+```console
 usage: start.py [-h] [-db DB_PATH] [-smp SIAMESE_MODEL_PATH] [-load LOAD_FROM_FILE] [-yolov5 YOLOV5_TYPE]
                 [-cdl COOLDOWN_LIMIT] [-rcl REGULAR_CHECK_LIMIT] [-size SCREEN_SIZE] [-scale SCALE]
 
@@ -44,7 +57,8 @@ optional arguments:
 
 ```
 #### Example :
-```
+
+```shell
 python start.py -db ../../Documents/database/ -smp ../../Documents/saved_models/siamese_model -load TRUE -yolov5 yolov5m -cdl 0.25 -rcl 3 -size 775*580 -scale 1*1
 ```
 #### Screenshots : 
