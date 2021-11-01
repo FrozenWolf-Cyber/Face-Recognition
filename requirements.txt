@@ -1,0 +1,14 @@
+# To run the classifier
+
+opencv-python
+torch
+numpy
+torchvision
+Pillow
+facenet-pytorch
+
+# To train the siamese model
+
+pandas
+seaborn
+matplotlib
