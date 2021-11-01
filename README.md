@@ -12,7 +12,48 @@ MTCNN takes up most of the memory if it directly feeds the webcam feed. To solve
 This program is only meant to detect and classify people in the webcam feed so that it can be used to ensure user privacy by trading less memory over accuracy. This makes the program weak in marking the objects. For example say there are 3 people present in the webcam , if these people start moving while actively being present inside the frame of the webcam then the program might get confused while marking which class name belongs to which person. But the position actually doesn't matter to ensure users privacy. Still this problem can be solved by implementing short term memory for previous object location and using it to predict the closest possible location. Here I have solved problem slightly inefficient by running MTCNN network every few seconds.
 
 ## Quick start :
-1. Install Requirements :
+### 1. Install Requirements :
 
-2. Usuage :
-![image](https://user-images.githubusercontent.com/57902078/139660166-1a04eb0d-a4d5-4138-b1f1-d1038db6f622.png)
+### 2. Usuage :
+
+```
+usage: start.py [-h] [-db DB_PATH] [-smp SIAMESE_MODEL_PATH] [-load LOAD_FROM_FILE] [-yolov5 YOLOV5_TYPE]
+                [-cdl COOLDOWN_LIMIT] [-rcl REGULAR_CHECK_LIMIT] [-size SCREEN_SIZE] [-scale SCALE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -db DB_PATH, --db_path DB_PATH
+                        Database path . Use relative path . Default path : database/
+  -smp SIAMESE_MODEL_PATH, --siamese_model_path SIAMESE_MODEL_PATH
+                        Siamese Model path . Use relative path . Default path : saved_models/siamese_model
+  -load LOAD_FROM_FILE, --load_from_file LOAD_FROM_FILE
+                        [TRUE] if you want to load reference embeddings from previously generated file , [FALSE] if
+                        you want to recompile or create new embeddings for the reference images . Default is set to
+                        TRUE
+  -yolov5 YOLOV5_TYPE, --yolov5_type YOLOV5_TYPE
+                        Enter which yolov5 model you want to use : [yolov5s] ,[yolov5m] ,[yolov5l] ,[yolov5x] .
+                        Default type : yolov5m
+  -cdl COOLDOWN_LIMIT, --cooldown_limit COOLDOWN_LIMIT
+                        Lower the cooldown higher the precision higher the memory usage . Default value : 0.5s
+  -rcl REGULAR_CHECK_LIMIT, --regular_check_limit REGULAR_CHECK_LIMIT
+                        Helps in correcting previous errors by either the camera or the program . Default value : 3s
+  -size SCREEN_SIZE, --screen_size SCREEN_SIZE
+                        Set Default screen size for the webcam feed : [SCREEN_W*SCREEN_H] . Default size : 800*600
+  -scale SCALE, --scale SCALE
+                        Set Default scale for the webcam feed : [SCALE_X*SCALE_Y] . Default size : 1*1
+
+```
+#### Example :
+```
+python start.py -db ../../Documents/database/ -smp ../../Documents/saved_models/siamese_model -load TRUE -yolov5 yolov5m -cdl 0.25 -rcl 3 -size 775*580 -scale 1*1
+```
+#### Screenshots : 
+![image](https://user-images.githubusercontent.com/57902078/139665172-f2befe7d-b4cc-4f10-8206-f76b899be46f.png)
+
+![image](https://user-images.githubusercontent.com/57902078/139664693-0ebe95d7-b8bf-4460-b6a3-fc525c33e233.png)
+
+### 3. Result :
+I changed the webcam feed to sample Image. While testing with my webcam directly I was still able to maintain high fps while consuming very less memory
+
+![result](https://user-images.githubusercontent.com/57902078/139665886-504cea98-3b9d-4f16-88a7-5c30c50083bf.png)
+
