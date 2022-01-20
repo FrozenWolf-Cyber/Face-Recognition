@@ -1,4 +1,4 @@
-# Face-Recognition-Pytorch
+# Face-Recognition
 Training Siamese model to create a one-shot neural network model using Face-Net and MTCNN as the backbone. Yolov5 and OpenCV are used alongside to classify faces in the webcam feed.
 We are trying to implement face recognition with very little memory usage by switching between yolov5 and MTCNN when necessary .The target of this repository is to use run facial recognition in the background to ensure user privacy and protection while leaving more than enough memory for the user to continue using the device for personal uses.
 
